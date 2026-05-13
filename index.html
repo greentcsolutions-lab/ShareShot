@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShareShot • Instant Screenshot Sharing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .drop-zone { transition: all 0.2s; }
+        .drop-zone.dragover { background-color: #1e3a8a; border-color: #60a5fa; }
+    </style>
+</head>
+<body class="bg-gray-950 text-white min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-lg w-full">
+        <div class="text-center mb-10">
+            <h1 class="text-5xl font-bold mb-2">📸 ShareShot</h1>
+            <p class="text-gray-400">Drop a screenshot • Get a link • Done</p>
+        </div>
+
+        <!-- Upload Area -->
+        <div id="upload-area"
+             class="drop-zone border-2 border-dashed border-gray-700 rounded-3xl p-12 text-center hover:border-blue-500 cursor-pointer bg-gray-900">
+            <input type="file" id="file-input" accept="image/*" class="hidden">
+            
+            <div class="text-7xl mb-6">📤</div>
+            <p class="text-xl font-medium mb-2">Drop screenshot here</p>
+            <p class="text-gray-500 text-sm">or click to browse • PNG, JPG, GIF (max 10MB)</p>
+        </div>
+
+        <!-- Uploading Status -->
+        <div id="uploading" class="hidden mt-8 text-center">
+            <div class="inline-flex items-center gap-3 bg-gray-900 px-6 py-3 rounded-2xl">
+                <div class="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <span>Uploading to ImgBB...</span>
+            </div>
+        </div>
+
+        <!-- Success -->
+        <div id="success" class="hidden mt-8 bg-gray-900 rounded-3xl p-8 text-center">
+            <img id="preview" class="mx-auto max-h-96 rounded-2xl mb-6 shadow-2xl">
+            
+            <div class="flex gap-3">
+                <input id="share-link" readonly 
+                       class="flex-1 bg-gray-800 text-white px-4 py-4 rounded-2xl text-sm font-mono">
+                <button onclick="copyLink()" 
+                        class="bg-white text-black px-8 rounded-2xl font-semibold hover:bg-gray-200">
+                    Copy
+                </button>
+            </div>
+            
+            <p class="text-xs text-gray-500 mt-6">
+                Anyone with this link can view it • No sign-up • Hosted on ImgBB
+            </p>
+            <button onclick="resetUI()" 
+                    class="mt-6 text-blue-400 hover:text-blue-300 text-sm">
+                ← Upload another
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const uploading = document.getElementById('uploading');
+        const success = document.getElementById('success');
+        const preview = document.getElementById('preview');
+        const shareLink = document.getElementById('share-link');
+
+        // Click or drag
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFile);
+
+        uploadArea.addEventListener('dragover', e => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+        uploadArea.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer);
+        });
+
+        async function handleFile(e) {
+            const file = e.target?.files?.[0] || e.files?.[0];
+            if (!file) return;
+
+            uploading.classList.remove('hidden');
+            uploadArea.classList.add('hidden');
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const res = await fetch('https://api.imgbb.com/1/upload?key=0c85b094703ff029d0f115d5f65088ab', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (data.status === 200) {
+                    preview.src = data.data.image.url;
+                    shareLink.value = data.data.image.url;
+                    success.classList.remove('hidden');
+                } else {
+                    alert('Upload failed. Try again.');
+                    resetUI();
+                }
+            } catch (err) {
+                alert('Network error. Make sure you have internet.');
+                resetUI();
+            }
+        }
+
+        function copyLink() {
+            shareLink.select();
+            document.execCommand('copy');
+            const orig = shareLink.value;
+            shareLink.value = '✅ Copied!';
+            setTimeout(() => shareLink.value = orig, 1500);
+        }
+
+        function resetUI() {
+            uploading.classList.add('hidden');
+            success.classList.add('hidden');
+            uploadArea.classList.remove('hidden');
+            fileInput.value = '';
+        }
+    </script>
+</body>
+</html>
