@@ -28,18 +28,6 @@ Anyone with the link can view the image. No accounts required.
 2. Go to **Settings → Pages**
 3. Set source to `Deploy from a branch` → `main` → `/ (root)`
 4. Click **Save**
-5. Your site will be live at `https://yourusername.github.io/screenshot-share` in under a minute
+5. Your site will be live at `https://xxx.github.io/screenshot-share` in under a minute
 
-## 🔑 ImgBB Setup (Required)
 
-This project uses [ImgBB](https://imgbb.com/) as a free image host.
-
-1. Go to [ImgBB](https://imgbb.com/)
-2. Sign up (or login with Google)
-3. Visit [API page](https://api.imgbb.com/)
-4. Copy your **API key**
-5. Open `index.html` and replace the placeholder key:
-
-```js
-// Change this line:
-https://api.imgbb.com/1/upload?key=YOUR_REAL_API_KEY_HERE
